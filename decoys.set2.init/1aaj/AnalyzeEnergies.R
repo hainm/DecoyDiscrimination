@@ -1,0 +1,56 @@
+amber <- read.table('AmberEnergies.sc', header=TRUE)
+rosetta <- read.table('RosettaEnergies.sc', header=TRUE)
+
+#amber: rmsd, rism, bond, constraint, imp, amd_boost, scf, polar, elec, angle, disp, les, gb, tot, elec_14, dihedral, surf, hbond, noe, vdw_14, dvdl, vdw, emap, ct, angle_ub, cmap, pb
+
+#rosetta: rmsd, total_score, dsfl_fa13, fa_atr, fa_dun, fa_elec, fa_intra_rep, fa_rep, fa_sol, hbond_bb_sc, hbond_lr_bb, hbond_sc, hbond_sr_bb, omega, p_aa_pp, pro_close, rama, ref
+
+par(mfrow=c(5,5))
+
+##Rosetta terms
+plot(rosetta$rmsd, rosetta$total_score)
+plot(rosetta$rmsd, rosetta$dsfl_fa13)
+plot(rosetta$rmsd, rosetta$fa_atr)
+plot(rosetta$rmsd, rosetta$fa_dun)
+plot(rosetta$rmsd, rosetta$fa_elect)
+plot(rosetta$rmsd, rosetta$fa_intra_rep)
+plot(rosetta$rmsd, rosetta$fa_rep)
+plot(rosetta$rmsd, rosetta$fa_sol)
+plot(rosetta$rmsd, rosetta$hbond_bb_sc)
+plot(rosetta$rmsd, rosetta$hbond_lr_bb)
+plot(rosetta$rmsd, rosetta$hbond_sc)
+plot(rosetta$rmsd, rosetta$hbond_sr_bb)
+plot(rosetta$rmsd, rosetta$omega)
+plot(rosetta$rmsd, rosetta$p_aa_pp)
+plot(rosetta$rmsd, rosetta$pro_close)
+plot(rosetta$rmsd, rosetta$rama)
+#plot(rosetta$rmsd, rosetta$ref)
+
+##Amber terms
+#plot(amber$rmsd, amber$rism)
+plot(amber$rmsd, amber$bond, col='red')
+#plot(amber$rmsd, amber$constraint)
+#plot(amber$rmsd, amber$imp)
+#plot(amber$rmsd, amber$amd)
+#plot(amber$rmsd, amber$scf)
+#plot(amber$rmsd, amber$pol)
+plot(amber$rmsd, amber$elec, col='red')
+plot(amber$rmsd, amber$angle, col='red')
+#plot(amber$rmsd, amber$disp)
+#plot(amber$rmsd, amber$les)
+plot(amber$rmsd, amber$gb, col='red')
+plot(amber$rmsd, amber$tot, col='red')
+plot(amber$rmsd, amber$elec_14, col='red')
+plot(amber$rmsd, amber$dihe, col='red')
+#plot(amber$rmsd, amber$surf)
+#plot(amber$rmsd, amber$hbond)
+#plot(amber$rmsd, amber$noe)
+plot(amber$rmsd, amber$vdw_14, col='red')
+
+#plot(amber$rmsd, amber$dvdl)
+plot(amber$rmsd, amber$vdw, col='red')
+#plot(amber$rmsd, amber$emap)
+#plot(amber$rmsd, amber$ct)
+#plot(amber$rmsd, amber$angle_ub)
+#plot(amber$rmsd, amber$cmap)
+#plot(amber$rmsd, amber$pb)

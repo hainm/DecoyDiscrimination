@@ -1,0 +1,44 @@
+
+          -------------------------------------------------------
+          Amber 14 SANDER                              2014
+          -------------------------------------------------------
+
+| PMEMD implementation of SANDER, Release 14
+
+| Run on 12/31/2015 at 12:50:40
+
+|   Executable path: pmemd
+| Working directory: /net/cottus/u2/kmb413/DecoyDiscrimination/1aaj/AmberMin
+|          Hostname: gyges.rutgers.edu
+
+  [-O]verwriting output
+
+File Assignments:
+|   MDIN: mdin                                                                  
+|  MDOUT: mdout                                                                 
+| INPCRD: empty_tag_0001_0001.pdb                                               
+|   PARM: 1aaj.parm7                                                            
+| RESTRT: empty_tag_0001_0001.rst                                               
+|   REFC: refc                                                                  
+|  MDVEL: mdvel                                                                 
+|   MDEN: mden                                                                  
+|  MDCRD: mdcrd                                                                 
+| MDINFO: mdinfo                                                                
+|  MDFRC: mdfrc                                                                 
+
+
+ Here is the input file:
+
+&cntrl                                                                         
+       imin = 1,                                                               
+       maxcyc = 500,                                                           
+       ncyc = 250,                                                             
+       ntb = 0,                                                                
+       igb = 8,                                                                
+       cut = 999.0                                                             
+/                                                                              
+
+
+ 
+| ERROR:   Could not read second line of empty_tag_0001_0001.pdb                                                                                                                                                                                                                                         
+|          Bad inpcrd file!
