@@ -1,9 +1,9 @@
 import os, sys, getopt, math, time
 
-PATH_TO_DECOYDISC = "/scratch/kmb413/RealDecoyDisc/DecoyDiscrimination"
+PATH_TO_DECOYDISC = "/project1/dacase-001/haichit/rosseta_amber/DecoyDiscrimination/"
 ROSETTA_BIN = PATH_TO_DECOYDISC+"/extract_pdbs.static.linuxgccrelease"
 ROSETTA_DB = PATH_TO_DECOYDISC+"/Rosetta_Database/"
-AMBER_HOME = "/scratch/kmb413/amber_jan142016"
+AMBER_HOME = os.environ.get("AMBERHOME")
 
 def chunks(l,n):
     n = max(1,n)
