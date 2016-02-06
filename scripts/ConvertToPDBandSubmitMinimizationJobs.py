@@ -111,7 +111,7 @@ def main(argv):
             tfile.write("source leaprc.ff14SBonlysc\n")
             tfile.write("m = loadpdb @@@.pdb\n")
             tfile.write("set default pbradii mbondi3\n")
-            tfile.write("saveamberparm m @@@.parm7 @@@.rst7\n")
+            tfile.write("saveamberparm m %s.parm7 @@@.rst7\n" % input_pdb)
             tfile.write("quit")
 
         for pdb in no_h_decoys:
@@ -122,7 +122,6 @@ def main(argv):
         no_h_decoys = os.popen('ls %s/%s/%s/NoH_*.pdb' % (PATH_TO_DECOYDISC, decoy_set, input_pdb) ).readlines()
         for i in range(len(no_h_decoys)):
             no_h_decoys[i] = no_h_decoys[i].rstrip()
-    
     ######################################
     ### Generate Minimization Commands ###
     ######################################
@@ -131,15 +130,13 @@ def main(argv):
 
         if dt != '':
             min_rst7 = "/".join(pdb.split('/')[0:-1]) + "/" + dt + "/min_"+pdb.split('/')[-1].rstrip('.pdb\n')+'.rst7'
+            min_out = "/".join(pdb.split('/')[0:-1]) + "/" + dt + "/min_"+pdb.split('/')[-1].rstrip('.pdb\n')+'.out'
+        
         else:
             min_rst7 = "min_" + pdb.rstrip('.pdb\n') + ".rst7"
-
-        if dt != '':
-            min_out = "/".join(pdb.split('/')[0:-1]) + "/" + dt + "/min_"+pdb.split('/')[-1].rstrip('.pdb\n')+'.out'
-        else:
             min_out = "min_" + pdb.rstrip('.pdb\n') + ".out"
-        
-        minimization_commands.append('sander -i %s -o %s -p %s.parm7 -c %s.rst7 -r %s -ref %s.rst7\n' % ( min_script, min_out, pdb.rstrip('.pdb\n'), pdb.rstrip('.pdb\n'), min_rst7, pdb.rstrip('.pdb\n') ) )
+       
+        minimization_commands.append('sander -i %s -o %s -p %s/%s/%s/%s.parm7 -c %s.rst7 -r %s -ref %s.rst7\n' % ( min_script, min_out, PATH_TO_DECOYDISC, decoy_set, input_pdb, input_pdb, pdb.rstrip('.pdb\n'), min_rst7, pdb.rstrip('.pdb\n') ) )
 
 
     #################################
