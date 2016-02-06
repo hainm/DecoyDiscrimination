@@ -131,10 +131,9 @@ def main(argv):
             (PATH_TO_DECOYDISC, decoy_set, input_pdb, dt))
         # sys.exit()
 
-    if dt == '':
+    if dt:
         os.system(
-            "{ROSETTA_BIN} -database {ROSETTA_DB} -in:file:silent"
-            "{PATH_TO_DECOYDISC}/{decoy_set}/{input_pdb}.{file_ending}".format(
+            "{ROSETTA_BIN} -database {ROSETTA_DB} -in:file:silent {PATH_TO_DECOYDISC}/{decoy_set}/{input_pdb}.{file_ending}".format(
                 ROSETTA_BIN=ROSETTA_BIN,
                 ROSETTA_DB=ROSETTA_DB,
                 PATH_TO_DECOYDISC=PATH_TO_DECOYDISC,
@@ -190,6 +189,7 @@ def main(argv):
     ### Generate Minimization Commands ###
     ######################################
     minimization_commands = []
+    print(no_h_decoys)
     for pdb in no_h_decoys:
 
         if dt != '':
