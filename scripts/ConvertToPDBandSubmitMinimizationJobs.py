@@ -10,6 +10,8 @@ ROSETTA_BIN = PATH_TO_DECOYDISC + "/extract_pdbs.static.linuxgccrelease"
 ROSETTA_DB = PATH_TO_DECOYDISC + "/Rosetta_Database/"
 AMBER_HOME = os.environ.get('AMBERHOME')
 
+SKIP_RS = True
+
 assert AMBER_HOME, 'must set AMBERHOME'
 
 
@@ -61,7 +63,7 @@ def main(argv):
         elif opt in ("-d", "--decoy_set"):
             decoy_set_index = int(arg)
         elif opt in ("-m", "--minimization_script"):
-            min_script = arg
+            min_script = os.path.abspath(arg)
 
     if input_pdb == '':
         print('ERROR: No input pdb supplied.')
@@ -115,7 +117,6 @@ def main(argv):
         os.system(
             "cp %s/Natives/%s_0001.clean.pdb ." %
             (PATH_TO_DECOYDISC, input_pdb))
-
     else:
         print("WARNING: %s/%s/%s EXISTS." %
               (PATH_TO_DECOYDISC, decoy_set, input_pdb))
@@ -131,51 +132,63 @@ def main(argv):
             (PATH_TO_DECOYDISC, decoy_set, input_pdb, dt))
         # sys.exit()
 
-    if dt:
-        os.system(
-            "{ROSETTA_BIN} -database {ROSETTA_DB} -in:file:silent {PATH_TO_DECOYDISC}/{decoy_set}/{input_pdb}.{file_ending}".format(
-                ROSETTA_BIN=ROSETTA_BIN,
-                ROSETTA_DB=ROSETTA_DB,
-                PATH_TO_DECOYDISC=PATH_TO_DECOYDISC,
-                decoy_set=decoy_set,
-                input_pdb=input_pdb,
-                file_ending=file_ending)
-        )
-
-        # List of pdbs ["<pdb1>\n", "<pdb2>\n", ...]
-        decoys = os.popen('ls empty*.pdb').readlines()
-
-        ##################################
-        ### Remove Hydrogens from PDBs ###
-        ##################################
-        no_h_decoys = []
-        for pdb in decoys:
+    if not dt:
+        # generate pdb files
+        if not SKIP_RS:
             os.system(
-                "sed '/     H  /d' %s > NoH_%s" %
-                (pdb.rstrip(), pdb.rstrip()))
-            no_h_decoys.append('NoH_%s' % pdb.rstrip())
+                "{ROSETTA_BIN} -database {ROSETTA_DB} -in:file:silent {PATH_TO_DECOYDISC}/{decoy_set}/{input_pdb}.{file_ending}".format(
+                    ROSETTA_BIN=ROSETTA_BIN,
+                    ROSETTA_DB=ROSETTA_DB,
+                    PATH_TO_DECOYDISC=PATH_TO_DECOYDISC,
+                    decoy_set=decoy_set,
+                    input_pdb=input_pdb,
+                    file_ending=file_ending)
+            )
+
+        def get_no_h_decoys():
+            # List of pdbs ["<pdb1>\n", "<pdb2>\n", ...]
+            decoys = os.popen('ls ../empty*.pdb').readlines()
+
+            ##################################
+            ### Remove Hydrogens from PDBs ###
+            ##################################
+            no_h_decoys = []
+            for pdb in decoys:
+                os.system(
+                    "sed '/     H  /d' %s > NoH_%s" %
+                    (pdb.rstrip(), pdb.rstrip()))
+                no_h_decoys.append('NoH_%s' % pdb.rstrip())
+            return no_h_decoys
+
+        no_h_decoys = get_no_h_decoys()
 
         ##################################################
         ### Create RST7 and PARM7 files from NoH_PDBs. ###
         ##################################################
 
         for pdb in no_h_decoys:
-            print(pdb)
-            with open('{}.tleap.in'.format(code), 'w') as tfile:
+            # we only need one single tleap file
+            with open('tleap.in', 'w') as tfile:
                 code = pdb.rstrip('.pdb\n')
 
-                tleap_input = '''
+                # all prmtop files are the same 
+                # keep only one
+                template = '''
                 source leaprc.ff14SBonlysc
                 m = loadpdb {code}.pdb
                 set default pbradii mbondi3
-                saveamberparm m {code}parm7 {code}rst7
+                saveamberparm m prmtop {code}.rst7
                 quit
-                '''.format(code=code)
+                '''
+
+                tleap_input = '\n'.join(line.strip() for line in template.split('\n'))
+                tleap_input = tleap_input.format(code=code)
                 tfile.write(tleap_input)
 
-            os.system('tleap -f {code}.tleap.in)')
+            os.system('tleap -f tleap.in')
 
     else:
+        # get no_h_decoys
         no_h_decoys = os.popen(
             'ls {PATH_TO_DECOYDISC}/{decoy_set}/{input_pdb}/NoH_*.pdb'.format(
                 PATH_TO_DECOYDISC=PATH_TO_DECOYDISC,
@@ -189,7 +202,6 @@ def main(argv):
     ### Generate Minimization Commands ###
     ######################################
     minimization_commands = []
-    print(no_h_decoys)
     for pdb in no_h_decoys:
 
         if dt != '':
@@ -204,15 +216,13 @@ def main(argv):
         else:
             min_out = "min_" + pdb.rstrip('.pdb\n') + ".out"
 
-        rootname = pdb.rstrip('.pdb\n'),
+        rootname = pdb.strip('.pdb\n')
         minimization_commands.append(
-            'sander -i {min_script} -o {min_out} -p {prmtop}.parm7 -c {rst7}.rst7 -r {min_rst7} -ref {ref}.rst7\n'.format(
+            'sander -i {min_script} -o {min_out} -p {rootname}/prmtop -c {rootname}.rst7 -r {min_rst7} -ref {rootname}.rst7 \n'.format(
                 min_script=min_script,
                 min_out=min_out,
-                prmtop=rootname,
-                rst7=rootname,
-                min_rst7=min_rst7,
-                ref=rootname))
+                rootname=rootname,
+                min_rst7=min_rst7))
 
     #################################
     ##### Submit to Slurm Queue #####
@@ -238,24 +248,25 @@ def main(argv):
     template_slurm = '''#!/bin/bash
     #SBATCH -n 1
     #SBATCH -c 1
-    #SBATCH -o MinimizationScript{filecount}.out
-    #SBATCH --job-name={input_pdb}M{filecount}
+    #SBATCH -o MinimizationScript{file_count}.out
+    #SBATCH --job-name={input_pdb}M{file_count}
 
-    source {AMBERHOME}/amber.sh
+    source {AMBER_HOME}/amber.sh
+
+
     '''
 
     template_slurm = '\n'.join(line.strip()
                                for line in template_slurm.split('\n'))
 
     for minchunk in minimization_chunks:
-        print(minchunk)
         file_count += 1
         filename = 'MinimizationScript{file_count}.sh'.format(
             file_count=file_count)
 
         with open(filename, 'w') as minfile:
             minfile.write(template_slurm.format(
-                file_count=filecount,
+                file_count=file_count,
                 input_pdb=input_pdb,
                 AMBER_HOME=AMBER_HOME)
             )
