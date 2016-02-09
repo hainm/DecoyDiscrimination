@@ -40,7 +40,6 @@ def run_each_core(cmlist):
     cmlist : a list of commands
     '''
     for cm in cmlist:
-        print(cm)
         os.system(cm)
 
 def get_commands_for_my_rank(total_commands, rank):
