@@ -1,0 +1,24 @@
+<ROSETTASCRIPTS>
+      <SCOREFXNS>
+      </SCOREFXNS>
+      <TASKOPERATIONS>
+         <InitializeFromCommandline name=init/>
+
+      </TASKOPERATIONS>
+      <FILTERS>      
+      </FILTERS>
+
+      <MOVERS>
+ 	<FastRelax name=fastrelax repeats=8 task_operations=init>      
+        </FastRelax> 
+        <ConstraintSetMover name=coord_cst/>
+
+</MOVERS>
+<APPLY_TO_POSE>
+</APPLY_TO_POSE>
+
+      <PROTOCOLS>
+              Add mover_name=coord_cst/>
+	      <Add mover_name=fastrelax/>        
+      </PROTOCOLS>
+</ROSETTASCRIPTS>
