@@ -77,10 +77,13 @@ if __name__ == '__main__':
     except OSError:
         pass
 
-    command_template = '{sander} {overwrite} -i {minin} -p {prmtop} -c {rst7} -r min_{rst7} -o out/min_{rst7_no_ext}.out -ref {rst7}'
+    command_template = '{sander} {overwrite} -i {minin} -p {prmtop} -c {abspath_rst7} -r min_{rst7} -o out/min_{rst7_no_ext}.out -ref {abspath_rst7}'
 
     commands = []
-    for rst7 in rst7_files:
+    for rst7_file in rst7_files:
+        # make sure rst7 is relative path
+        abspath_rst7 = os.path.abspath(rst7_file)
+        rst7 = rst7_file.split('./')[-1]
         restart_ext = '.' + rst7.split('.')[-1]
         command = command_template.format(
             sander='sander',
@@ -88,6 +91,7 @@ if __name__ == '__main__':
             minin=args.mdin,
             prmtop=args.prmtop,
             rst7=rst7,
+            abspath_rst7=abspath_rst7,
             rst7_no_ext=rst7.strip(restart_ext))
         commands.append(command)
 

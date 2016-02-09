@@ -1,27 +1,26 @@
 #!/usr/bin/env python
 
-'''use ./submit_elf1.py -h to see help
-
-Basically, you can just type:
-    ./submit_elf1.py to re-run all minimization for all pdb codes with/without restraining
+description = '''
+Run all minimizations (with and without restraining) for all proteins:
+    # supposed you're in ./DecoyDiscrimination folder
+    python scripts/elf1/submit_elf1.py --over-write
 
 To run specific code:
-    ./submit_elf1.py --code 1ez3
+    python scripts/elf1/submit_elf1.py --code 1ez3 --over-write
 
 Please use -h to see more options
+
+Notes
+-----
+no_restraint files are in decoys.set{1,2}.init/{pdbcode}/no_restraint/
 '''
 
 import os
 import sys
 from glob import glob, iglob
 import argparse
+from argparse import RawTextHelpFormatter
 from contextlib import contextmanager
-
-description = '''
-python submit_elf1.py --code all --core_per_node=24
-
-submit jobs to run sander minimization for each protein by using n_nodes with core_per_node
-'''.strip().format(my_program=sys.argv[0])
 
 SLURM_TEMPLATE = '''#!/bin/sh
 #SBATCH -J {job_name}
@@ -35,7 +34,6 @@ cd {pwd}
 run_script={run_script}
 minfile={minfile}
 prmtop={prmtop}
-minfile={minfile}
 
 mpirun -n {total_cores} $run_script {overwrite} -p $prmtop -c "{rst7_pattern}" -i $minfile
 '''
@@ -50,7 +48,7 @@ def temp_change_dir(new_dir):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description=description)
+    parser = argparse.ArgumentParser(description=description, formatter_class=RawTextHelpFormatter)
     parser.add_argument(
         '-n',
         '--n-nodes',
@@ -69,8 +67,9 @@ def parse_args():
     parser.add_argument(
         '-id',
         '--code',
-        help='pdb code, default ALL pdb files',
-        default='all', type=str)
+        required=True,
+        help='pdb code or "all" (run all codes)',
+        type=str)
     parser.add_argument(
         '-t',
         dest='time',
@@ -79,7 +78,7 @@ def parse_args():
     parser.add_argument(
         '-rst7_pattern',
         '--rst7-pattern',
-        default='*.rst7',
+        default='NoH*.rst7',
         help='pattern to search for rst7 files, default *.rst7', type=str)
     parser.add_argument(
         '-m',
@@ -139,41 +138,46 @@ def run_min_each_folder(code_dir, job_name, args):
     min_type = args.min_type
 
     idir = iglob(code_dir + '/*' + args.prmtop_ext)
-    first_prmtop = os.path.abspath(next(idir))
+    try:
+        first_prmtop = os.path.abspath(next(idir))
+        with temp_change_dir(code_dir):
+            # run minimization without restraint
+            option_dict = dict(
+                    job_name=job_name,
+                    n_nodes=args.n_nodes,
+                    time=args.time,
+                    overwrite=minus_o,
+                    total_cores=args.n_nodes * args.core_per_node,
+                    run_script=args.run_script,
+                    prmtop=first_prmtop,
+                    pwd=os.getcwd(),
+                    rst7_pattern=args.rst7_pattern)
 
-    with temp_change_dir(code_dir):
-        # run minimization without restraint
-        option_dict = dict(
-                job_name=job_name,
-                n_nodes=args.n_nodes,
-                time=args.time,
-                overwrite=minus_o,
-                total_cores=args.n_nodes * args.core_per_node,
-                run_script=args.run_script,
-                prmtop=first_prmtop,
-                pwd=os.getcwd(),
-                rst7_pattern=args.rst7_pattern)
-
-        if min_type in [0, 1]:
-            minfile = args.root_min_dir + '/min.in'
-            option_dict['minfile'] = minfile
-            sbatch_content = SLURM_TEMPLATE.format(**option_dict)
-            print(sbatch_content)
-
-        # run minimization with restraint
-        if min_type in [0, 2]:
-            try:
-                os.mkdir('no_restraint')
-            except OSError:
-                pass
-            with temp_change_dir(os.path.abspath('./no_restraint/')):
+            if min_type in [0, 1]:
                 with open('submit.sh', 'w') as fh:
-                    minfile = args.root_min_dir + '/min_norestraint.in'
+                    minfile = args.root_min_dir + '/min.in'
                     option_dict['minfile'] = minfile
-                    option_dict['pwd'] = os.getcwd()
                     sbatch_content = SLURM_TEMPLATE.format(**option_dict)
-                    print("")
-                    print(sbatch_content)
+                    fh.write(sbatch_content)
+
+            # run minimization with restraint
+            if min_type in [0, 2]:
+                try:
+                    os.mkdir('no_restraint')
+                except OSError:
+                    pass
+                with temp_change_dir(os.path.abspath('./no_restraint/')):
+                    with open('submit.sh', 'w') as fh:
+                        minfile = args.root_min_dir + '/min_norestraint.in'
+                        option_dict['minfile'] = minfile
+                        option_dict['pwd'] = os.getcwd()
+                        option_dict['job_name'] = job_name + '.2'
+                        option_dict['rst7_pattern'] = '../' + args.rst7_pattern
+                        sbatch_content = SLURM_TEMPLATE.format(**option_dict)
+                        fh.write(sbatch_content)
+    except StopIteration:
+        first_prmtop = ''
+        print(code_dir)
 
 def get_pdbcodes(args):
     '''
@@ -205,3 +209,4 @@ if __name__ == '__main__':
     args = parse_args()
     pdbcodes = get_pdbcodes(args)
     submit(pdbcodes)
+
