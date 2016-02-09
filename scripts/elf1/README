@@ -1,0 +1,1 @@
+python ConvertToPDBandSubmitMinimizationJobs.py -n 1l8r -d 2 -m `pwd`/min/min.in -p 30
