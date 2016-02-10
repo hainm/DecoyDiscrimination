@@ -1,8 +1,0 @@
-&cntrl
-       imin = 1,
-       maxcyc = 500,
-       ncyc = 250,
-       ntb = 0,
-       igb = 8, 
-       cut = 999.0
-/

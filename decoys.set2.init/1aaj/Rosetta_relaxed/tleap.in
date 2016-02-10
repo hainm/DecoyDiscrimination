@@ -1,0 +1,5 @@
+source leaprc.ff14SBonlysc
+m = loadpdb @@@.pdb
+set default pbradii mbondi3
+saveamberparm m @@@.parm7 @@@.rst7
+quit

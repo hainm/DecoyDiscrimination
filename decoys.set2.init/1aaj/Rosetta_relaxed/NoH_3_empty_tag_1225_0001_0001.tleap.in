@@ -1,0 +1,5 @@
+source leaprc.ff14SBonlysc
+m = loadpdb NoH_3_empty_tag_1225_0001_0001.pdb
+set default pbradii mbondi3
+saveamberparm m NoH_3_empty_tag_1225_0001_0001.parm7 NoH_3_empty_tag_1225_0001_0001.rst7
+quit

@@ -1,1 +1,0 @@
-/home/kmb413/Rosetta/main/source/bin/extract_pdbs.linuxgccrelease -database /home/kmb413/Rosetta/main/database/ -in:file:silent /home/kmb413/DecoyDiscrimination/DecoyDiscrimination/decoys.set2.init/1aaj.retag.nocartbump.out
