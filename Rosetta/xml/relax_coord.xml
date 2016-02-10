@@ -1,5 +1,6 @@
 <ROSETTASCRIPTS>
       <SCOREFXNS>
+                <myscore weights=talaris2014_cst.wts />
       </SCOREFXNS>
       <TASKOPERATIONS>
          <InitializeFromCommandline name=init/>
@@ -9,7 +10,7 @@
       </FILTERS>
 
       <MOVERS>
- 	<FastRelax name=fastrelax repeats=8 task_operations=init>      
+ 	<FastRelax name=fastrelax repeats=8 scorefxn=myscore task_operations=init ramp_down_constraints=false >      
         </FastRelax> 
         <ConstraintSetMover name=coord_cst/>
 
